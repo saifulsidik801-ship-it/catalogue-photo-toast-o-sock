@@ -38,10 +38,14 @@ def jpeg_dimensions(path):
             i += 1
             continue
         marker = data[i + 1]
-        if marker in (0xD8, 0xD9) or 0xD0 <= marker <= 0xD7:
+        if marker in (0xD8, 0xD9) or 0xD0 <= marker <= 0xD7 or marker == 0x01:
             i += 2
             continue
+        if i + 4 > len(data):
+            raise ValueError("truncated JPEG segment")
         length = struct.unpack(">H", data[i + 2:i + 4])[0]
+        if length < 2 or i + 2 + length > len(data):
+            raise ValueError("truncated JPEG segment")
         if marker in (0xC0, 0xC1, 0xC2):
             height, width = struct.unpack(">HH", data[i + 5:i + 9])
             return width, height
